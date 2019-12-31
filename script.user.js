@@ -22,11 +22,14 @@ if (APIVALUE !== 'foo'){
     <form> <!-- For true form use method="POST" action="YOUR_DESIRED_URL" -->                                                                            \
         <input type="text" id="artist_mdid" value="" style="display:none">                                                                               \
         <input type="text" id="album" value="" style="display:none">                                                                                     \
-        <div class="ui search" id="search_div_id">                                                                                                                          \
-            <input type="text" class="prompt" id="searchID" placeholder="Artist Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist Name'">  \
-            <div class="results" id="results"></div>                                                                                                                  \
+        <div class="ui search" id="search_artist">                                                                                                       \
+            <input type="text" class="prompt" id="ArtistsearchID" placeholder="Artist Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist Name'">\
+            <div class="results" id="artistresults"></div>                                                                                               \
         </div>                                                                                                                                           \
-        <input type="text" id="myNumber6" value="" class="field" placeholder="Screenshot Links" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Screenshot Links'">\
+        <div class="ui search" id="search_album" style="display:none"">                                                                                  \
+            <input type="text" class="prompt" id="AlbumsearchID" placeholder="Album Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Album Name'">\
+            <div class="results" id="albumresults"></div>                                                                                                \
+        </div>                                                                                                                                           \
         <input type="text" id="myNumber2" value="" class="field" placeholder="Download Link" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Download Link'">\
         <textarea rows="1" style="width:100%;" class="field" name="message" id="myNumber4" placeholder="Mediainfo" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Mediainfo'"></textarea>\
         <span>DownCloud</span>                                                                                                                           \
@@ -51,7 +54,7 @@ if (APIVALUE !== 'foo'){
     $("body").append ( `                                                                                                                                 \
     <div id="gmPopupContainer">                                                                                                                          \
     <form>                                                                                                                                               \
-        <label>Enter Your Last.FM API Key, Then Click On Save :)</label>                                                                                    \
+        <label>Enter Your Last.FM API Key, Then Click On Save :)</label>                                                                                 \
         <input type="text" id="lastfmkey" value="" class="input" placeholder="Omdb API Key">                                                             \
         <button id="gmAddNumsBtn" onClick="window.location.reload();" type="button">Save Key</button>                                                    \
         <button id="gmCloseDlgBtn" type="button">Close Popup</button>                                                                                    \
@@ -66,8 +69,13 @@ var artist_mdid
 var Rerun_statement = setInterval(searchinterval, 1000)
 
 function searchinterval(){
-if (!$('#artist_mdid').val()){
-$('.ui.search')
+if ($('#artist_mdid').val()){
+clearInterval(Rerun_statement);
+document.getElementById("search_artist").style.display="none";
+document.getElementById("search_album").style.display="";
+}}
+
+$('#search_artist')
       .search({
         type          : 'category',
         apiSettings: {
@@ -111,20 +119,19 @@ $('.ui.search')
         },
         minCharacters : 3
       })
-} else {
-    clearInterval(Rerun_statement);
-    $('.ui.search')
+
+$('#search_album')
       .search({
         type          : 'category',
         apiSettings: {
-          url: `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${APIKEY}&artist=${artist_mdid}&album={query}&format=json`,
+          url: `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${APIKEY}&artist=${artist_name}&album=Believe&format=json`,
           onResponse : function(myfunc) {
         var
           response = {
             results : {}
           }
         ;
-        $.each(myfunc.results.albummatches.artist, function(index, item) {
+        $.each(myfunc.results.albummatches.album, function(index, item) {
           var
             laxunoob   = ' ',
             maxResults = 10
@@ -156,15 +163,12 @@ $('.ui.search')
         },
         minCharacters : 3
       })
-$('#searchID').attr('placeholder',"Album Name");
-$('#searchID').attr('onblur',"this.placeholder = 'Album Name'");
-}}
+
 //--- Use jQuery to activate the dialog buttons.
 $("#gmAddNumsBtn").click ( function () {
     var ddl = $("#myNumber2").val ();
     var artistmbid = $("#hiddenartistmbid").val ();
     var lastfmkey = $("#lastfmkey").val ();
-    var screenshots = $("#myNumber6").val ();
     var hidereactscore = $("#HideReactScore").val ();
     var hideposts = $("#HidePosts").val ();
     if (lastfmkey) {
@@ -182,16 +186,6 @@ $("#gmAddNumsBtn").click ( function () {
     if (hideposts !== "0"){
         ddl = `[HIDEPOSTS=${hideposts}]` + ddl + '[/HIDEPOSTS]'
     }
-if (screenshots) {
-   screenshots = screenshots.split(" ");
-   var screen = `\n[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Screenshots[/b][/color][/size][/indent]\n [Spoiler='screenshots']`;
-   for (var ss of screenshots) {
-       screen += `[img]${ss}[/img]`;
-   }
-   screen += `[/Spoiler] \n`;
-} else {
-  screen = ""
-}
 GM_xmlhttpRequest({
 method: "GET",
 url: `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&api_key=${APIKEY}&mbid=${artistmbid}&format=json`,
@@ -249,8 +243,8 @@ GM_addStyle ( "                                                   \
             border-image: linear-gradient(to right, #11998e,#38ef7d);\
             border-image-slice:     1;                            \
       }                                                           \
-      /* Imdb search */                                           \
-      input[id=searchID]{                                         \
+      /* Artist & Album search */                                 \
+      input[class=prompt]{                                        \
             font-family:            inherit;                      \
             width:                  100%;                         \
             border:                 0;                            \
@@ -262,7 +256,7 @@ GM_addStyle ( "                                                   \
             background:             transparent;                  \
             transition:             border-color 0.2s;            \
       }                                                           \
-      input[id=searchID]:focus {                                  \
+      input[class=prompt]:focus {                                 \
             padding-bottom:         6px;                          \
             border-bottom:          2px solid teal;               \
             font-weight:            700;                          \
