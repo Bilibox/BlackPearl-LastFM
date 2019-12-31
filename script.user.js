@@ -20,14 +20,14 @@ if (APIVALUE !== 'foo'){
    $("body").append ( `                                                                                                                                  \
     <div id="gmPopupContainer">                                                                                                                          \
     <form> <!-- For true form use method="POST" action="YOUR_DESIRED_URL" -->                                                                            \
-        <input type="text" id="hiddenartistmbid" value="" style="display:none">                                                                                 \
-        <div class="ui search">                                                                                                                          \
-            <input type="text" class="prompt" id="searchID" placeholder="Artist name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'artist name'">               \
-            <div class="results"></div>                                                                                                                  \
+        <input type="text" id="artist_mdid" value="" style="display:none">                                                                               \
+        <input type="text" id="album" value="" style="display:none">                                                                                     \
+        <div class="ui search" id="search_div_id">                                                                                                                          \
+            <input type="text" class="prompt" id="searchID" placeholder="Artist Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist Name'">  \
+            <div class="results" id="results"></div>                                                                                                                  \
         </div>                                                                                                                                           \
-        <input type="text" id="myNumber6" value="" class="field" placeholder="Screenshot Links" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Screenshot Links'">          \
-        <input type="text" id="myNumber1" value="" class="field" placeholder="Youtube Trailer Link" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Youtube Trailer Link'">  \
-        <input type="text" id="myNumber2" value="" class="field" placeholder="Download Link" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Download Link'">                \
+        <input type="text" id="myNumber6" value="" class="field" placeholder="Screenshot Links" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Screenshot Links'">\
+        <input type="text" id="myNumber2" value="" class="field" placeholder="Download Link" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Download Link'">\
         <textarea rows="1" style="width:100%;" class="field" name="message" id="myNumber4" placeholder="Mediainfo" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Mediainfo'"></textarea>\
         <span>DownCloud</span>                                                                                                                           \
         <label class="switch">                                                                                                                           \
@@ -52,7 +52,7 @@ if (APIVALUE !== 'foo'){
     <div id="gmPopupContainer">                                                                                                                          \
     <form>                                                                                                                                               \
         <label>Enter Your Last.FM API Key, Then Click On Save :)</label>                                                                                    \
-        <input type="text" id="myNumber5" value="" class="input" placeholder="Omdb API Key">                                                             \
+        <input type="text" id="lastfmkey" value="" class="input" placeholder="Omdb API Key">                                                             \
         <button id="gmAddNumsBtn" onClick="window.location.reload();" type="button">Save Key</button>                                                    \
         <button id="gmCloseDlgBtn" type="button">Close Popup</button>                                                                                    \
     </form>                                                                                                                                              \
@@ -62,6 +62,11 @@ if (APIVALUE !== 'foo'){
 GM.getValue("APIKEY", "foo").then(value => {
     const APIKEY = value
 
+var artist_mdid
+var Rerun_statement = setInterval(searchinterval, 1000)
+
+function searchinterval(){
+if (!$('#artist_mdid').val()){
 $('.ui.search')
       .search({
         type          : 'category',
@@ -75,19 +80,19 @@ $('.ui.search')
         ;
         $.each(myfunc.results.artistmatches.artist, function(index, item) {
           var
-            imnoob   = '~~~~~~~~~~',
+            laxunoob   = ' ',
             maxResults = 10
           ;
           if(index >= maxResults) {
             return false;
           }
-          if(response.results[imnoob] === undefined) {
-            response.results[imnoob] = {
-              name    : imnoob,
+          if(response.results[laxunoob] === undefined) {
+            response.results[laxunoob] = {
+              name    : laxunoob,
               results : []
             };
           }
-          response.results[imnoob].results.push({
+          response.results[laxunoob].results.push({
             title       : item.name,
             description : item.name,
             unq         : item.mbid
@@ -101,25 +106,69 @@ $('.ui.search')
           title   : 'name',
         },
         onSelect: function(response){
-            $('#hiddenartistmbid').val(response.unq);
+             $('#artist_mdid').val(response.unq);
+             console.log($('#artist_mdid').val())
         },
         minCharacters : 3
       })
-  
-  
-  
+} else {
+    clearInterval(Rerun_statement);
+    $('.ui.search')
+      .search({
+        type          : 'category',
+        apiSettings: {
+          url: `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${APIKEY}&artist=${artist_mdid}&album={query}&format=json`,
+          onResponse : function(myfunc) {
+        var
+          response = {
+            results : {}
+          }
+        ;
+        $.each(myfunc.results.albummatches.artist, function(index, item) {
+          var
+            laxunoob   = ' ',
+            maxResults = 10
+          ;
+          if(index >= maxResults) {
+            return false;
+          }
+          if(response.results[laxunoob] === undefined) {
+            response.results[laxunoob] = {
+              name    : laxunoob,
+              results : []
+            };
+          }
+          response.results[laxunoob].results.push({
+            title       : item.name,
+            description : item.name,
+            unq         : item.mbid
+          });
+        });
+        return response;
+      }
+        },
+        fields: {
+          results : 'results',
+          title   : 'name',
+        },
+        onSelect: function(response){
+             $('#album').val(response.unq);
+        },
+        minCharacters : 3
+      })
+$('#searchID').attr('placeholder',"Album Name");
+$('#searchID').attr('onblur',"this.placeholder = 'Album Name'");
+}}
 //--- Use jQuery to activate the dialog buttons.
 $("#gmAddNumsBtn").click ( function () {
-    var uToob = $("#myNumber1").val ();
     var ddl = $("#myNumber2").val ();
     var artistmbid = $("#hiddenartistmbid").val ();
-    var MEDIAINFO = $("#myNumber4").val ();
-    var omdbkey = $("#myNumber5").val ();
+    var lastfmkey = $("#lastfmkey").val ();
     var screenshots = $("#myNumber6").val ();
     var hidereactscore = $("#HideReactScore").val ();
     var hideposts = $("#HidePosts").val ();
-    if (omdbkey) {
-       GM.setValue("APIKEY", omdbkey);
+    if (lastfmkey) {
+       GM.setValue("APIKEY", lastfmkey);
     }
     if (Downcloud.checked){
         ddl = '[DOWNCLOUD]' + ddl + '[/DOWNCLOUD]'
@@ -143,17 +192,11 @@ if (screenshots) {
 } else {
   screen = ""
 }
-if (uToob.match(/[a-z]/)) {
-    var trailer = `\n[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Trailer[/b][/color][/size][/indent]\n ${uToob}`
-} else {
-    trailer = ""
-}
 GM_xmlhttpRequest({
 method: "GET",
 url: `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&api_key=${APIKEY}&mbid=${artistmbid}&format=json`,
 onload: function(response) {
 var json = JSON.parse(response.responseText);
-  alert(json.artist.bio.content) ; 
   var dump = "a";
     GM_setClipboard (dump);
     $(`#myNumberSum`).text (`Copied to clipboard! Just paste on Blackpearl.biz`);
