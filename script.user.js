@@ -20,7 +20,7 @@ if (APIVALUE !== 'foo'){
    $("body").append ( `                                                                                                                                  \
     <div id="gmPopupContainer">                                                                                                                          \
     <form> <!-- For true form use method="POST" action="YOUR_DESIRED_URL" -->                                                                            \
-        <input type="text" id="hiddenartist" value="" style="display:none">                                                                                 \
+        <input type="text" id="hiddenartistmbid" value="" style="display:none">                                                                                 \
         <div class="ui search">                                                                                                                          \
             <input type="text" class="prompt" id="searchID" placeholder="Artist name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'artist name'">               \
             <div class="results"></div>                                                                                                                  \
@@ -64,23 +64,55 @@ GM.getValue("APIKEY", "foo").then(value => {
 
 $('.ui.search')
       .search({
+        type          : 'category',
         apiSettings: {
-          url: `https://ws.audioscrobbler.com/2.0/?method=artist.search&artist={query}&limit=10&api_key=${APIKEY}&format=json`
+          url: `https://ws.audioscrobbler.com/2.0/?method=artist.search&artist={query}&limit=10&api_key=${APIKEY}&format=json`,
+          onResponse : function(myfunc) {
+        var
+          response = {
+            results : {}
+          }
+        ;
+        $.each(myfunc.results.artistmatches.artist, function(index, item) {
+          var
+            imnoob   = '~~~~~~~~~~',
+            maxResults = 10
+          ;
+          if(index >= maxResults) {
+            return false;
+          }
+          if(response.results[imnoob] === undefined) {
+            response.results[imnoob] = {
+              name    : imnoob,
+              results : []
+            };
+          }
+          response.results[imnoob].results.push({
+            title       : item.name,
+            description : item.name,
+            unq         : item.mbid
+          });
+        });
+        return response;
+      }
         },
         fields: {
-          results : 'artist',
+          results : 'results',
           title   : 'name',
         },
         onSelect: function(response){
-            $('#hiddenartist').val(response.name);
+            $('#hiddenartistmbid').val(response.unq);
         },
         minCharacters : 3
       })
+  
+  
+  
 //--- Use jQuery to activate the dialog buttons.
 $("#gmAddNumsBtn").click ( function () {
     var uToob = $("#myNumber1").val ();
     var ddl = $("#myNumber2").val ();
-    var artist = $("#hiddenartist").val ();
+    var artistmbid = $("#hiddenartistmbid").val ();
     var MEDIAINFO = $("#myNumber4").val ();
     var omdbkey = $("#myNumber5").val ();
     var screenshots = $("#myNumber6").val ();
@@ -118,42 +150,11 @@ if (uToob.match(/[a-z]/)) {
 }
 GM_xmlhttpRequest({
 method: "GET",
-url: `https://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${APIKEY}&artist=${artist}&album=Believe&format=json`,
+url: `https://ws.audioscrobbler.com/2.0/?method=artist.getinfo&api_key=${APIKEY}&mbid=${artistmbid}&format=json`,
 onload: function(response) {
 var json = JSON.parse(response.responseText);
-    var title = json.Title;
-    var year = json.Year;
-    var rated = json.Rated;
-    var released = json.Released;
-    var runtime = json.Runtime;
-    var genre = json.Genre;
-    var director = json.Director;
-    var writer = json.Writer;
-    var actors = json.Actors;
-    var plot = json.Plot;
-    var poster = json.Poster;
-    var rating = json.imdbRating;
-    var imdb_id = json.imdbID;
-    var imdbvotes = json.imdbVotes;
-    var production = json.Production;
-    var dump = `[center][img] ${poster} [/img]
-[color=rgb(250, 197, 28)][b][size=6] ${title} (${year})[/size][/b][/color]
-[url=https://www.imdb.com/title/${imdb_id}][img]https://i.imgur.com/rcSipDw.png[/img][/url][size=6][b] ${rating}[/b]/10[/size]
-[size=6][img]https://i.imgur.com/sEpKj3O.png[/img]${imdbvotes}[/size][/center]
-[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Plot[/b][/color][/size][/indent]\n\n ${plot}${trailer}${screen}
-[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Movie Info[/b][/color][/size][/indent]\n
-[LIST][*][B]Rating: [/B]${rated}
-[*][B]Genre: [/B] ${genre}
-[*][B]Directed By: [/B] ${director}
-[*][B]Written By: [/B] ${writer}
-[*][B]Starring: [/B] ${actors}
-[*][B]Release Date: [/B] ${released}
-[*][B]Runtime: [/B] ${runtime}
-[*][B]Production: [/B] ${production} [/LIST]
-[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Media Info[/b][/color][/size][/indent]\n
-[spoiler='Click here to view Media Info']\n ${MEDIAINFO} \n[/spoiler]
-[hr][/hr][center][size=6][color=rgb(250, 197, 28)][b]Download Link[/b][/color][/size][/center]\n
-[center]${ddl}[/center]`;
+  alert(json.artist.bio.content) ; 
+  var dump = "a";
     GM_setClipboard (dump);
     $(`#myNumberSum`).text (`Copied to clipboard! Just paste on Blackpearl.biz`);
 }})});;})
