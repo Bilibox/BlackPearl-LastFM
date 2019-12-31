@@ -20,8 +20,8 @@ if (APIVALUE !== 'foo'){
    $("body").append ( `                                                                                                                                  \
     <div id="gmPopupContainer">                                                                                                                          \
     <form> <!-- For true form use method="POST" action="YOUR_DESIRED_URL" -->                                                                            \
-        <input type="text" id="artist_mdid" value="" style="display:none">                                                                               \
-        <input type="text" id="album" value="" style="display:none">                                                                                     \
+        <input type="text" id="artist_name" value="" style="display:none">                                                                               \
+        <input type="text" id="album_mbid" value="" style="display:none">                                                                                \
         <div class="ui search" id="search_artist">                                                                                                       \
             <input type="text" class="prompt" id="ArtistsearchID" placeholder="Artist Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist Name'">\
             <div class="results" id="artistresults"></div>                                                                                               \
@@ -65,16 +65,6 @@ if (APIVALUE !== 'foo'){
 GM.getValue("APIKEY", "foo").then(value => {
     const APIKEY = value
 
-var artist_mdid
-var Rerun_statement = setInterval(searchinterval, 1000)
-
-function searchinterval(){
-if ($('#artist_mdid').val()){
-clearInterval(Rerun_statement);
-document.getElementById("search_artist").style.display="none";
-document.getElementById("search_album").style.display="";
-}}
-
 $('#search_artist')
       .search({
         type          : 'category',
@@ -114,17 +104,24 @@ $('#search_artist')
           title   : 'name',
         },
         onSelect: function(response){
-             $('#artist_mdid').val(response.unq);
-             console.log($('#artist_mdid').val())
+             $('#artist_name').val(response.title);
         },
         minCharacters : 3
       })
 
+var Rerun_statement = setInterval(searchinterval, 1000)
+
+function searchinterval(){
+if ($('#artist_name').val()){
+clearInterval(Rerun_statement);
+var artist_name = $('#artist_name').val();
+document.getElementById("search_artist").style.display="none";
+document.getElementById("search_album").style.display="";
 $('#search_album')
       .search({
         type          : 'category',
         apiSettings: {
-          url: `http://ws.audioscrobbler.com/2.0/?method=album.getinfo&api_key=${APIKEY}&artist=${artist_name}&album=Believe&format=json`,
+          url: `https://ws.audioscrobbler.com/2.0/?method=album.search&api_key=${APIKEY}&album={query}&format=json`,
           onResponse : function(myfunc) {
         var
           response = {
@@ -163,7 +160,7 @@ $('#search_album')
         },
         minCharacters : 3
       })
-
+}}
 //--- Use jQuery to activate the dialog buttons.
 $("#gmAddNumsBtn").click ( function () {
     var ddl = $("#myNumber2").val ();
