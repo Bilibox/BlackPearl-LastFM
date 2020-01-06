@@ -1,2 +1,2 @@
-# BlackPearl-LastFM
-Blackpearl LastFM Maker
+# BlackPearl-Music-Generator
+BlackPearl-Music-Generator
