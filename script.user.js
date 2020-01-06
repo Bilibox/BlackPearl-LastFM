@@ -76,38 +76,36 @@ $('#search_artist')
             results : {}
           }
         ;
-        $.each(myfunc.results, function(index, item) {
-          var
-            laxunoob   = ' ',
-            maxResults = 10
-          ;
-          if(index >= maxResults) {
-            return false;
+              $.each(myfunc.Search, function(index, item) {
+                  var
+                  category   = item.Type.toUpperCase() || 'Unknown',
+                      maxResults = 10;
+                  if(index >= maxResults) {
+                      return false;
+                  }
+                  if(response.results[category] === undefined) {
+                      response.results[category] = {
+                          name    : "~~~~~~~~~~"+category+"~~~~~~~~~~",
+                          results : []
+                      };
+                  }
+                  var Name = item.title;
+                  response.results[category].results.push({
+                      title       : Name,
+                  });
+              });
+              return response;
           }
-          if(response.results[laxunoob] === undefined) {
-            response.results[laxunoob] = {
-              name    : laxunoob,
-              results : []
-            };
-          }
-          response.results[laxunoob].results.push({
-            title       : item.title,
-            description : item.name,
-            unq         : item.mbid
-          });
-        });
-        return response;
-      }
         },
-        fields: {
-          results : 'results',
-          title   : 'name',
-        },
-        onSelect: function(response){
-             $('#artist_name').val(response.title);
-        },
-        minCharacters : 3
-      })
+    fields: {
+        results : 'results',
+        title   : 'name',
+    },
+    onSelect: function(response){
+        $('#artist_name').val(response.title);
+    },
+    minCharacters : 3
+})
 
 var Rerun_statement = setInterval(searchinterval, 1000)
 
@@ -129,39 +127,36 @@ $('#search_album')
             results : {}
           }
         ;
-        $.each(myfunc.results.albummatches.album, function(index, item) {
-          var
-            laxunoob   = ' ',
-            maxResults = 10
-          ;
-          if(index >= maxResults) {
-            return false;
+              $.each(myfunc.Search, function(index, item) {
+                  var
+                  category   = item.Type.toUpperCase() || 'Unknown',
+                      maxResults = 10;
+                  if(index >= maxResults) {
+                      return false;
+                  }
+                  if(response.results[category] === undefined) {
+                      response.results[category] = {
+                          name    : "~~~~~~~~~~"+category+"~~~~~~~~~~",
+                          results : []
+                      };
+                  }
+                  var Name = item.title;
+                  response.results[category].results.push({
+                      title       : Name,
+                  });
+              });
+              return response;
           }
-          if(response.results[laxunoob] === undefined) {
-            response.results[laxunoob] = {
-              name    : laxunoob,
-              results : []
-            };
-          }
-          response.results[laxunoob].results.push({
-            title       : item.name,
-            description : item.name,
-            unq         : item.mbid
-          });
-        });
-        return response;
-      }
         },
-        fields: {
-          results : 'results',
-          title   : 'name',
-        },
-        onSelect: function(response){
-             $('#album').val(response.unq);
-        },
-        minCharacters : 3
-      })
-}}
+    fields: {
+        results : 'results',
+        title   : 'name',
+    },
+    onSelect: function(response){
+        $('#album_name').val(response.unq);
+    },
+    minCharacters : 3
+})
     //--- Use jQuery to activate the dialog buttons.
     $("#gmAddNumsBtn").click ( function () {
         var dgKey = $("#dgKey").val ();
