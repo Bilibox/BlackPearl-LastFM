@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name        Blackpearl Discog Poster
-// @version     1.0.0Alpha
+// @version     1.0.0
 // @description Template Maker
 // @author      BiliTheBox
 // @icon        https://blackpearl.biz/favicon.png
@@ -21,7 +21,8 @@ var Generate_Template = `
 <a href='javascript:void(0)' onclick='$("#gmPopupContainer").hide ();' class="close"></a>
 <form>
 <input type="text" id="artist_name" value="" style="display:none">
-<input type="text" id="album_name" value="" style="display:none">
+<input type="text" id="artist_id" value="" style="display:none">
+<input type="text" id="album_master_id" value="" style="display:none">
 <div class="ui search" id="search_artist">
 <input type="text" class="prompt" id="ArtistsearchID" placeholder="Artist Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist Name'">
 <div class="results" id="artistresults"></div>
@@ -69,7 +70,7 @@ $('#search_artist')
       .search({
         type          : 'category',
         apiSettings: {
-          url: `https://api.discogs.com/database/search?q={query}&per_page=10&page=1&token=${DiscorgKey}`,
+          url: `https://api.discogs.com/database/search?q={query}&type=artist&per_page=10&page=1&token=${DiscorgKey}`,
           onResponse : function(myfunc) {
         var
           response = {
@@ -78,7 +79,7 @@ $('#search_artist')
         ;
               $.each(myfunc.results, function(index, item) {
                   var
-                  category   = item.type || 'Unknown',
+                  category = item.type || 'Unknown',
                       maxResults = 10;
                   if(index >= maxResults) {
                       return false;
@@ -92,7 +93,8 @@ $('#search_artist')
                   var Name = item.title;
                   response.results[category].results.push({
                       title       : Name,
-                      description : Name
+                      description : Name,
+                      artist_id   : item.id
                   });
               });
               return response;
@@ -104,6 +106,7 @@ $('#search_artist')
     },
     onSelect: function(response){
         $('#artist_name').val(response.title);
+        $('#artist_id').val(response.artist_id);
     },
     minCharacters : 3
 })
@@ -113,7 +116,7 @@ var Rerun_statement = setInterval(searchinterval, 1000)
 function searchinterval(){
     if ($('#artist_name').val()){
         clearInterval(Rerun_statement);
-        var artist_name = $('#artist_name').val();
+        var artist_id = $('#artist_id').val();
         document.getElementById("search_artist").style.display="none";
         document.getElementById("search_album").style.display="";
 
@@ -121,7 +124,7 @@ $('#search_album')
       .search({
         type          : 'category',
         apiSettings: {
-          url: `https://api.discogs.com/database/search?release_title={query}&artist=${artist_name}&per_page=10&page=1&token=${DiscorgKey}`,
+          url: `https://api.discogs.com/artists/${artist_id}/releases?sort=year&per_page=500&page=1&token=${DiscorgKey}`,
           onResponse : function(myfunc) {
         var
           response = {
@@ -150,12 +153,15 @@ $('#search_album')
               return response;
           }
         },
+    searchFields   : [
+        'name'
+    ],
     fields: {
         results : 'results',
         title   : 'name',
     },
         onSelect: function(response){
-             $('#album').val(response.unq);
+             $('#album_master_id').val(response.master_id);
         },
         minCharacters : 3
       })
@@ -201,7 +207,7 @@ $('#search_album')
                 }
                 GM_xmlhttpRequest({
                     method: "GET",
-                    url: `https://api.discogs.com/database/search?&artist=${artist_name}&per_page=10&page=1&${DiscorgKey}`,
+                    url: `https://api.discogs.com/database/search?&artist=${artist_name}&per_page=10&page=1&token=${DiscorgKey}`,
                     onload: function(response) {
                         var json = JSON.parse(response.responseText);
                         if (json.Poster && json.Poster !== "N/A"){
