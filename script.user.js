@@ -76,9 +76,9 @@ $('#search_artist')
             results : {}
           }
         ;
-              $.each(myfunc.Search, function(index, item) {
+              $.each(myfunc.results, function(index, item) {
                   var
-                  category   = item.Type.toUpperCase() || 'Unknown',
+                  category   = item.type || 'Unknown',
                       maxResults = 10;
                   if(index >= maxResults) {
                       return false;
@@ -92,6 +92,7 @@ $('#search_artist')
                   var Name = item.title;
                   response.results[category].results.push({
                       title       : Name,
+                      description : Name
                   });
               });
               return response;
@@ -120,16 +121,16 @@ $('#search_album')
       .search({
         type          : 'category',
         apiSettings: {
-          url: `https://api.discogs.com/database/search?release_title={query}&artist=${artist_name}&per_page=10&page=1&${DiscorgKey}`,
+          url: `https://api.discogs.com/database/search?release_title={query}&artist=${artist_name}&per_page=10&page=1&token=${DiscorgKey}`,
           onResponse : function(myfunc) {
         var
           response = {
             results : {}
           }
         ;
-              $.each(myfunc.Search, function(index, item) {
+              $.each(myfunc.results, function(index, item) {
                   var
-                  category   = item.Type.toUpperCase() || 'Unknown',
+                  category   = item.type || 'Unknown',
                       maxResults = 10;
                   if(index >= maxResults) {
                       return false;
@@ -140,9 +141,10 @@ $('#search_album')
                           results : []
                       };
                   }
-                  var Name = item.title;
+                  var Name = item.title +" ("+ item.year+")";
                   response.results[category].results.push({
                       title       : Name,
+                      description : Name
                   });
               });
               return response;
@@ -152,11 +154,12 @@ $('#search_album')
         results : 'results',
         title   : 'name',
     },
-    onSelect: function(response){
-        $('#album_name').val(response.unq);
-    },
-    minCharacters : 3
-})
+        onSelect: function(response){
+             $('#album').val(response.unq);
+        },
+        minCharacters : 3
+      })
+}}
     //--- Use jQuery to activate the dialog buttons.
     $("#gmAddNumsBtn").click ( function () {
         var dgKey = $("#dgKey").val ();
