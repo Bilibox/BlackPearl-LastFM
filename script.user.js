@@ -14,6 +14,7 @@
 // @grant       GM_setClipboard
 // @grant       GM.setValue
 // @grant       GM.getValue
+// @run-at      document-end
 // ==/UserScript==
 
 var Generate_Template = `
