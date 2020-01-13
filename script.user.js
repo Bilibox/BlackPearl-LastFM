@@ -2,7 +2,7 @@
 // @name        Blackpearl Discog Poster
 // @version     1.0.0
 // @description Template Maker
-// @author      BiliTheBox
+// @author      Blackpearl_Team
 // @icon        https://blackpearl.biz/favicon.png
 // @include     /^https:\/\/blackpearl\.biz\/forums\/(88|89|90|91|163)\/post-thread/
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
@@ -17,60 +17,78 @@
 // ==/UserScript==
 
 var Generate_Template = `
-<div id="gmPopupContainer">
-<a href='javascript:void(0)' onclick='$("#gmPopupContainer").hide ();' class="close"></a>
-<form>
-<input type="text" id="artist_name" value="" style="display:none">
-<input type="text" id="artist_id" value="" style="display:none">
-<input type="text" id="album_master_id" value="" style="display:none">
-<div class="ui search" id="search_artist">
-<input type="text" class="prompt" id="ArtistsearchID" placeholder="Artist Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist Name'">
-<div class="results" id="artistresults"></div>
+<button id="gmShowTemplate" name="template_button" style="display:none" type="button">Show</button>
+<div id="DiscogGenerator">
+<input type="text" id="master_url" value="" style="display:none">
+<input type="text" id="master_url" value="" style="display:none">
+<div class="ui search" id="Discog_search">
+<input type="text" class="prompt input" id="searchID" placeholder="Artist + Album name"  onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist + Album name'">
+<div class="results input" style="display:none"></div>
 </div>
-<div class="ui search" id="search_album" style="display:none"">
-<input type="text" class="prompt" id="AlbumsearchID" placeholder="Album Name" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Album Name'">
-<div class="results" id="albumresults"></div>
-</div>
-<input type="text" id="ddl" value="" class="field" placeholder="Download Link" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Download Link'">
+<input type="text" id="ddl" value="" class="input" placeholder="Download Link" onfocus="this.placeholder = ''" onblur="this.placeholder = 'Download Link'">
+<div id="textarea_divider">&nbsp;</div>
 <span>DownCloud</span>
 <label class="switch">
 <input type="checkbox" id="Downcloud" value="Downcloud" checked></input>
-<span class="slider round"></span></label>&nbsp;<br></br>
-<input type="number" id="HideReactScore" min="0" max="100" value="0"> HideReactScore
-<input type="number" id="HidePosts" min="0" max="50" value="0"> HidePosts<br>
-<p id="myNumberSum">&nbsp;</p>
-<button id="gmAddNumsBtn" type="button">Generate Template</button>
-<div class="divider"/>
-<button id="gmClearBtn" type="reset">Clear</button>
-</form>
+<span class="slider round"></span></label>
+HideReactScore
+<input type="number" id="HideReactScore" min="0" max="100" value="0">
+HidePosts
+<input type="number" id="HidePosts" min="0" max="50" value="0"> <br>
+<div id="textarea_divider">&nbsp;</div>
+<button id="gmGenerate" name="template_button" type="button">Generate Template</button>
+<button id="gmClearBtn" name="template_button" type="reset">Clear</button>
+<button id="gmHideTemplate" name="template_button" type="button">Hide</button>
 </div>
 `
 var dginput = `
-<div id="gmPopupContainer">
-<a href='#' onclick='$("#gmPopupContainer").hide ();' class="close"></a>
-<form>
+<button id="gmShowTemplate" name="template_button" style="display:none" type="button">Show</button>
+<div id="DiscogGenerator">
 <label>Enter Your discorg API Key, Then Click On Save :)</label>
-<input type="text" id="dgKey" value="" class="input" placeholder="discorg API Key">
-<button id="gmAddNumsBtn" type="button">Save Key</button>
-<button id="gmClearBtn" type="reset">Clear</button>
-</form>
+<input type="text" id="dgKey" value="" class="input" placeholder="discorg API Key" onfocus="this.placeholder = ''" onblur="this.placeholder = 'discorg API Key'">
+<button id="gmGenerate" name="template_button" onClick="window.location.reload();" type="button">Save Key</button>
+<button id="gmClearBtn" name="template_button" type="reset">Clear</button>
+<button id="gmHideTemplate" name="template_button" type="button">Hide</button>
 </div>
 `
 
-GM.getValue("DiscorgKey", "foo").then(value => { const APIVALUE = value
+GM.getValue("DiscogKey", "foo").then(value => { const APIVALUE = value
 if (APIVALUE !== 'foo'){
-    $("body").append (Generate_Template);
+    var temphtml = document.getElementsByTagName("dd")[0];
+    temphtml.innerHTML += Generate_Template;
 } else {
-    $("body").append (dginput);
+    temphtml = document.getElementsByTagName("dd")[0];
+    temphtml.innerHTML += dginput;
 }
 
-GM.getValue("DiscorgKey", "foo").then(value => {
-    const DiscorgKey = value
-$('#search_artist')
+var titlechange = document.getElementsByName("title")[0];
+if (titlechange){
+    titlechange.className += "input";
+}
+$(document).on('keydown', function(event) {
+    if (event.key == "Escape") {
+        $("#DiscogGenerator").hide ();
+        document.getElementById("gmShowTemplate").style.display = "block";
+    }
+});
+
+$("#gmHideTemplate").click ( function () {
+    document.getElementById("gmShowTemplate").style.display = "block";
+    $("#DiscogGenerator").hide ();
+});
+
+$("#gmShowTemplate").click ( function () {
+    document.getElementById("gmShowTemplate").style.display = "none";
+    $("#DiscogGenerator").show ();
+});
+
+GM.getValue("DiscogKey", "foo").then(value => {
+    const DiscogKey = value
+$('#Discog_search')
       .search({
         type          : 'category',
         apiSettings: {
-          url: `https://api.discogs.com/database/search?q={query}&type=artist&per_page=10&page=1&token=${DiscorgKey}`,
+          url: `https://api.discogs.com/database/search?q={query}&token=${DiscogKey}`,
           onResponse : function(myfunc) {
         var
           response = {
@@ -80,7 +98,7 @@ $('#search_artist')
               $.each(myfunc.results, function(index, item) {
                   var
                   category = item.type || 'Unknown',
-                      maxResults = 10;
+                      maxResults = 50;
                   if(index >= maxResults) {
                       return false;
                   }
@@ -90,13 +108,16 @@ $('#search_artist')
                           results : []
                       };
                   }
-                  var Name = item.title;
+                  var Name = item.title + " (" + item.year + ")";
                   response.results[category].results.push({
                       title       : Name,
                       description : Name,
-                      artist_id   : item.id
+                      master_url   : item.master_url
                   });
               });
+              delete response.results["release"]
+              delete response.results["label"]
+              delete response.results["artist"]
               return response;
           }
         },
@@ -105,93 +126,28 @@ $('#search_artist')
         title   : 'name',
     },
     onSelect: function(response){
-        $('#artist_name').val(response.title);
-        $('#artist_id').val(response.artist_id);
+        console.log(response)
+        $('#master_url').val(response.master_url);
     },
     minCharacters : 3
-})
-
-var Rerun_statement = setInterval(searchinterval, 1000)
-
-function searchinterval(){
-    if ($('#artist_name').val()){
-        clearInterval(Rerun_statement);
-        var artist_id = $('#artist_id').val();
-        document.getElementById("search_artist").style.display="none";
-        document.getElementById("search_album").style.display="";
-
-$('#search_album')
-      .search({
-        type          : 'category',
-        apiSettings: {
-          url: `https://api.discogs.com/artists/${artist_id}/releases?sort=year&per_page=500&page=1&token=${DiscorgKey}`,
-          onResponse : function(myfunc) {
-        var
-          response = {
-            results : {}
-          }
-        ;
-              $.each(myfunc.results, function(index, item) {
-                  var
-                  category   = item.type || 'Unknown',
-                      maxResults = 10;
-                  if(index >= maxResults) {
-                      return false;
-                  }
-                  if(response.results[category] === undefined) {
-                      response.results[category] = {
-                          name    : "~~~~~~~~~~"+category+"~~~~~~~~~~",
-                          results : []
-                      };
-                  }
-                  var Name = item.title +" ("+ item.year+")";
-                  response.results[category].results.push({
-                      title       : Name,
-                      description : Name
-                  });
-              });
-              return response;
-          }
-        },
-    searchFields   : [
-        'name'
-    ],
-    fields: {
-        results : 'results',
-        title   : 'name',
-    },
-        onSelect: function(response){
-             $('#album_master_id').val(response.master_id);
-        },
-        minCharacters : 3
-      })
-}}
+});
     //--- Use jQuery to activate the dialog buttons.
-    $("#gmAddNumsBtn").click ( function () {
+    $("#gmGenerate").click ( function () {
         var dgKey = $("#dgKey").val ();
-        var IID = $("#hiddenIID").val ();
-        var screenshots = $("#screensLinks").val ();
-        var uToob = $("#ytLink").val ();
         var ddl = $("#ddl").val ();
-        var MEDIAINFO = $("#Media_Info").val ();
         var hidereactscore = $("#HideReactScore").val ();
         var hideposts = $("#HidePosts").val ();
-        if (DiscorgKey == "foo") {
+        var master_url = $("#master_url").val ();
+        if (DiscogKey == "foo") {
             if (dgKey) {
-                GM.setValue("DiscorgKey", dgKey);
+                GM.setValue("DiscogKey", dgKey);
                 window.location.reload();
             } else {
                 alert("You Didn't Enter Your Key!!")
             }
         } else {
-            if (!IID){
-                IID = $("#searchID").val ();
-                if (IID.includes("imdb")) {
-                    IID = IID.match(/tt\d+/)[0];
-                }
-            }
-            if (!IID) {
-                alert("You Didn't Select A Title or Enter a IMDB ID!");
+            if (!master_url) {
+                alert("You Didn't Select A Result or Enter a URL!");
             } else if (!ddl) {
                 alert("Uh Oh! You Forgot Your Download Link! That's Pretty Important...");
             } else {
@@ -205,126 +161,79 @@ $('#search_album')
                 if (hideposts !== "0"){
                     ddl = `[HIDEPOSTS=${hideposts}]` + ddl + '[/HIDEPOSTS]'
                 }
+                var xhReq = new XMLHttpRequest();
+                xhReq.open("GET", `${master_url}?token=${DiscogKey}`, false);
+                xhReq.send(null);
+                var albumjson = JSON.parse(xhReq.responseText);
+                var artist_url = albumjson.artists[0].resource_url;
+                console.log(albumjson)
                 GM_xmlhttpRequest({
                     method: "GET",
-                    url: `https://api.discogs.com/database/search?&artist=${artist_name}&per_page=10&page=1&token=${DiscorgKey}`,
+                    url: `${artist_url}?token=${DiscogKey}`,
                     onload: function(response) {
-                        var json = JSON.parse(response.responseText);
-                        if (json.Poster && json.Poster !== "N/A"){
-                            var poster = "[center][img] " + json.Poster + " [/img]\n";
-                        } else {
-                            poster = ''
+                        var artistjson = JSON.parse(response.responseText);
+                        console.log(artistjson)
+                        var title = albumjson.title;
+                        var styles = albumjson.styles[0];
+                        var genres = albumjson.genres[0];
+                        var master_uri = albumjson.uri;
+                        var Cover = albumjson.images[0].uri;
+                        var artist = albumjson.artists[0].name;
+                        var memberlist = artistjson.members;
+                        var members = "";
+                        for (var ml of memberlist){
+                            members += ml.name + '\n[IMG width="150px"]' + ml.thumbnail_url + '[/IMG]\n' ;
                         }
-                        if (json.Title && json.Title !== "N/A"){
-                            var title = "[color=rgb(250, 197, 28)][b][size=6] " + json.Title;
-                        } else {
-                            alert("You Messed Up! Check That You've Entered Something Into The IMDB Field!")
+                        var tracklist = albumjson.tracklist;
+                        var tracks = "";
+                        for (var t of tracklist){
+                            tracks += t.duration + " " + t.position + " " + t.title + '\n';
                         }
-                        if (json.Year && json.Year !== "N/A"){
-                            var year = json.Year + ")[/size][/b][/color]\n";
-                        } else {
-                            year = ''
+                        var tracknum = tracklist.length;
+                        var artistslinks = artistjson.urls;
+                        var artlink = ""
+                        for (var artistlink of artistslinks){
+                            artlink += artistlink + '\n';
                         }
-                        if (json.imdbID && json.imdbID !== "N/A"){
-                            var imdb_id = "[url=https://www.imdb.com/title/" + json.imdbID + "][img]https://i.imgur.com/rcSipDw.png[/img][/url]";;
-                        } else {
-                            imdb_id = ''
-                        }
-                        if (json.imdbRating && json.imdbRating !== "N/A"){
-                            var rating = "[size=6][b]" + json.imdbRating + "[/b]/10[/size]\n";
-                        } else {
-                            rating = ''
-                        }
-                        if (json.imdbVotes && json.imdbVotes !== "N/A"){
-                            var imdbvotes = "[size=6][img]https://i.imgur.com/sEpKj3O.png[/img]" + json.imdbVotes + "[/size][/center]\n";
-                        } else {
-                            imdbvotes = ''
-                        }
-                        if (json.Plot && json.Plot !== "N/A"){
-                            var plot = "[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Plot[/b][/color][/size][/indent]\n\n " + json.Plot;
-                        } else {
-                            plot = ''
-                        }
-                        if (json.Rated && json.Rated !== "N/A"){
-                            var rated = "[B]Rating: [/B]" + json.Rated + "\n";
-                        } else {
-                            rated = ''
-                        }
-                        if (json.Genre && json.Genre !== "N/A"){
-                            var genre = "[*][B]Genre: [/B] " + json.Genre + "\n";
-                        } else {
-                            genre = ''
-                        }
-                        if (json.Director && json.Director !== "N/A"){
-                            var director = "[*][B]Directed By: [/B] " + json.Director + "\n";
-                        } else {
-                            director = ''
-                        }
-                        if (json.Writer && json.Writer !== "N/A"){
-                            var writer = "[*][B]Written By: [/B] " + json.Writer + "\n";
-                        } else {
-                            writer = ''
-                        }
-                        if (json.Actors && json.Actors !== "N/A"){
-                            var actors = "[*][B]Starring: [/B] " + json.Actors + "\n";
-                        } else {
-                            actors = ''
-                        }
-                        if (json.Released && json.Released !== "N/A"){
-                            var released = "[*][B]Release Date: [/B] " + json.Released + "\n";
-                        } else {
-                            released = ''
-                        }
-                        if (json.Runtime && json.Runtime !== "N/A"){
-                            var runtime = "[*][B]Runtime: [/B] " + json.Runtime + "\n";
-                        } else {
-                            runtime = ''
-                        }
-                        if (json.Production && json.Production !== "N/A"){
-                            var production = "[*][B]Production: [/B] " + json.Production + "\n";
-                        } else {
-                            production = ''
-                        }
-                        MEDIAINFO = "[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Media Info[/b][/color][/size][/indent]\n [spoiler='Click here to view Media Info']\n " + MEDIAINFO + "\n[/spoiler]\n"
-                        ddl = "[hr][/hr][center][size=6][color=rgb(250, 197, 28)][b]Download Link[/b][/color][/size]\n" + ddl + "\n[/center]"
-                        var dump = `${poster}${title} (${year}${imdb_id} ${rating}${imdbvotes}${plot}${trailer}${screen}
-[hr][/hr][indent][size=6][color=rgb(250, 197, 28)][b]Movie Info[/b][/color][/size][/indent]
-[LIST][*]${rated}${genre}${director}${writer}${actors}${released}${runtime}${production}[/LIST]\n${MEDIAINFO}${ddl}`;
+                        ddl = "[hr][/hr][center][size=6][color=rgb(44, 171, 162)][b]Download Link[/b][/color][/size]\n" + ddl + "\n[/center]"
+                        var dump = `[CENTER][IMG width='250px']${Cover}[/IMG]
+[COLOR=rgb(44, 171, 162)][B][SIZE=6] ${artist} - ${title}[/SIZE][/B][/COLOR]
+${tracknum} Tracks
+[SIZE=6]${styles} ${genres}[/SIZE]
+[/CENTER]
+[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Artist & Album Details[/B][/COLOR][/SIZE][/INDENT]
+[SPOILER='Member List']
+${members}
+[/SPOILER]
+[SPOILER='Track List']
+${tracks}
+[/SPOILER]
+[SPOILER='Artist Links']
+${artlink}
+[/SPOILER]
+[hr][/hr]
+${ddl}`;
                         GM_setClipboard (dump);
-                        $(`#myNumberSum`).text (`Copied! Just paste on Blackpearl.biz`);
-                        document.getElementsByName("message")[0].value = dump;
-                        var xf_title_value = document.getElementById("title").value;
-                        if (!xf_title_value){
-                            document.getElementById("title").value = json.Title + " (" + json.Year + ")";
+                        try {
+                            document.getElementsByName("message")[0].value = dump;
+                        } catch(err) {
+                            alert('You should be running this in BBCode Mode. Check the Readme for more information!\n' + err);
+                        } finally {
+                            var xf_title_value = document.getElementById("title").value;
+                            if (!xf_title_value){
+                                document.getElementById("title").value = name;
+                            }
                         }
                     }
-                })
+                });
             }
         }
     });
 });
 
-$(document).on('keydown', function(event) {
-       if (event.key == "Escape") {
-           $("#gmPopupContainer").hide ();
-       }
-   });
-
 //--- CSS styles make it work...
 GM_addStyle ( "                                                   \
     @media screen and (min-width: 300px) {                        \
-      #gmPopupContainer {                                         \
-            position:               fixed;                        \
-            bottom:                 0;                            \
-            right:                  0;                            \
-            padding:                1em;                          \
-            width:                  320px;                        \
-            background:             #42464D;                      \
-            border:                 1px double black;             \
-            border-radius:          1ex;                          \
-            margin-left:            -8px;                         \
-            z-index:                777;                          \
-        }                                                         \
       /* Divide Buttons */                                        \
       .divider{                                                   \
             width:                  8px;                          \
@@ -332,72 +241,37 @@ GM_addStyle ( "                                                   \
             display:                inline-block;                 \
       }                                                           \
       /* Buttons */                                               \
-      button {                                                    \
+      button[name=template_button] {                              \
             background-color:       #4caf50;                      \
             color:                  white;                        \
             text-align:             center;                       \
             text-decoration:        none;                         \
             display:                inline-block;                 \
             font-size:              14px;                         \
-            font-weight:            400;                          \
+            font-weight:            600;                          \
             padding:                4px;                          \
             cursor:                 pointer;                      \
             outline:                none;                         \
+            margin-right:           8px;                          \
             border:                 none;                         \
-            border-radius:          10px;                         \
+            border-radius:          3px;                          \
+            border-color:           #67bd6a;                      \
+            margin-top:             5px;                          \
+            box-shadow:             0 0 2px 0 rgba(0,0,0,0.14),   \
+                                    0 2px 2px 0 rgba(0,0,0,0.12), \
+                                    0 1px 3px 0 rgba(0,0,0,0.2);  \
         }                                                         \
       /* Reactscore & Posts */                                    \
       input[type=number]{                                         \
             border-bottom:          2px solid teal;               \
             border-image: linear-gradient(to right, #11998e,#38ef7d);\
             border-image-slice:     1;                            \
-      }                                                           \
-      /* Imdb search */                                           \
-      input[class=prompt]{                                        \
-            font-family:            inherit;                      \
-            width:                  100%;                         \
-            border:                 0;                            \
-            border-bottom:          2px solid #9b9b9b;            \
-            outline:                0;                            \
-            font-size:              1.3rem;                       \
-            color:                  white;                        \
-            padding:                7px 0;                        \
-            background:             transparent;                  \
-            transition:             border-color 0.2s;            \
-      }                                                           \
-      input[class=prompt]:focus {                                 \
-            padding-bottom:         6px;                          \
-            border-bottom:          2px solid teal;               \
-            font-weight:            700;                          \
-            border-width:           3px;                          \
-            border-image: linear-gradient(to right, #11998e,#38ef7d);\
-            border-image-slice:     1;                            \
-      }                                                           \
-      /* utoob & screens & DL */                                  \
-      .field {                                                    \
-            font-family:            inherit;                      \
-            width:                  100%;                         \
-            border:                 0;                            \
-            border-bottom:          2px solid #9b9b9b;            \
-            outline:                0;                            \
-            font-size:              1.3rem;                       \
-            color:                  white;                        \
-            padding:                7px 0;                        \
-            background:             transparent;                  \
-            transition:             border-color 0.2s;            \
-      }                                                           \
-      .field:focus {                                              \
-            padding-bottom:         6px;                          \
-            border-bottom:          2px solid teal;               \
-            font-weight:            700;                          \
-            border-width:           3px;                          \
-            border-image: linear-gradient(to right, #11998e,#38ef7d);\
-            border-image-slice:     1;                            \
-      }                                                           \
-      /* match all inputs to background*/                         \
-      input{                                                      \
             background:             transparent;                  \
             color:                  white;                        \
+            max-width:              35px;                         \
+      }                                                           \
+      #textarea_divider {                                         \
+            margin-top:             -11px;                        \
       }                                                           \
       /* Start Rounded sliders Checkboxes */                      \
       .switch {                                                   \
@@ -450,114 +324,46 @@ GM_addStyle ( "                                                   \
       .slider.round:before {                                      \
             border-radius:          50%;                          \
       }                                                           \
-      /* End Rounded sliders Checkboxes */                        \
-      .close {                                                    \
-            position:               absolute;                     \
-            right:                  26px;                         \
-            top:                    4px;                          \
-            opacity:                0.5;                          \
-      }                                                           \
-      .close:hover {                                              \
-            opacity:                1;                            \
-      }                                                           \
-      .close:before, .close:after {                               \
-            position:               absolute;                     \
-            left:                   15px;                         \
-            content:                ' ';                          \
-            height:                 15px;                         \
-            width:                  2.5px;                        \
-            background-color:       #4caf50;                      \
-      }                                                           \
-      .close:before {                                             \
-            transform:              rotate(45deg);                \
-      }                                                           \
-      .close:after {                                              \
-            transform:              rotate(-45deg);               \
-      }                                                           \
 }                                                                 \
     @media screen and (min-width: 768px) {                        \
-      #gmPopupContainer {                                         \
-            position:               fixed;                        \
-            bottom:                 0;                            \
-            right:                  0;                            \
-            padding:                2em;                          \
-            width:                  350px;                        \
-            background:             #42464D;                      \
-            border:                 3px double black;             \
-            border-radius:          1ex;                          \
-            margin-left:            -8px;                         \
-            z-index:                777;                          \
-      }                                                           \
+      /* Divide Buttons */                                        \
       .divider{                                                   \
-            width:                  8px;                          \
+            width:                  15px;                         \
             height:                 auto;                         \
             display:                inline-block;                 \
       }                                                           \
-      button {                                                    \
+      /* Buttons */                                               \
+      button[name=template_button] {                              \
             background-color:       #4caf50;                      \
             color:                  white;                        \
             text-align:             center;                       \
             text-decoration:        none;                         \
             display:                inline-block;                 \
             font-size:              15px;                         \
-            font-weight:            400;                          \
+            font-weight:            600;                          \
             padding:                6px;                          \
             cursor:                 pointer;                      \
             outline:                none;                         \
+            margin-right:           8px;                          \
             border:                 none;                         \
-            border-radius:          10px;                         \
+            border-radius:          3px;                          \
+            border-color:           #67bd6a;                      \
+            margin-top:             5px;                          \
+            box-shadow:             0 0 2px 0 rgba(0,0,0,0.14),   \
+                                    0 2px 2px 0 rgba(0,0,0,0.12), \
+                                    0 1px 3px 0 rgba(0,0,0,0.2);  \
         }                                                         \
+      /* Reactscore & Posts */                                    \
       input[type=number]{                                         \
             border-bottom:          2px solid teal;               \
             border-image: linear-gradient(to right, #11998e,#38ef7d);\
             border-image-slice:     1;                            \
-      }                                                           \
-      input[id=searchID]{                                         \
-            font-family:            inherit;                      \
-            width:                  100%;                         \
-            border:                 0;                            \
-            border-bottom:          2px solid #9b9b9b;            \
-            outline:                0;                            \
-            font-size:              1.3rem;                       \
-            color:                  white;                        \
-            padding:                7px 0;                        \
-            background:             transparent;                  \
-            transition:             border-color 0.2s;            \
-      }                                                           \
-      input[id=searchID]:focus {                                  \
-            padding-bottom:         6px;                          \
-            border-bottom:          2px solid teal;               \
-            font-weight:            700;                          \
-            border-width:           3px;                          \
-            border-image: linear-gradient(to right, #11998e,#38ef7d);\
-            border-image-slice:     1;                            \
-      }                                                           \
-      .field {                                                    \
-            font-family:            inherit;                      \
-            width:                  100%;                         \
-            border:                 0;                            \
-            border-bottom:          2px solid #9b9b9b;            \
-            outline:                0;                            \
-            font-size:              1.3rem;                       \
-            color:                  white;                        \
-            padding:                7px 0;                        \
-            background:             transparent;                  \
-            transition:             border-color 0.2s;            \
-      }                                                           \
-        &::placeholder {                                          \
-            color: transparent;                                   \
-     }                                                            \
-      .field:focus {                                              \
-            padding-bottom:         6px;                          \
-            border-bottom:          2px solid teal;               \
-            font-weight:            700;                          \
-            border-width:           3px;                          \
-            border-image: linear-gradient(to right, #11998e,#38ef7d);\
-            border-image-slice:     1;                            \
-      }                                                           \
-      input{                                                      \
             background:             transparent;                  \
             color:                  white;                        \
+            max-width:              35px;                         \
+      }                                                           \
+      #textarea_divider {                                         \
+            margin-top:             -11px;                        \
       }                                                           \
       .switch {                                                   \
             position:               relative;                     \
@@ -609,29 +415,6 @@ GM_addStyle ( "                                                   \
       }                                                           \
       .slider.round:before {                                      \
             border-radius:          50%;                          \
-      }                                                           \
-      .close {                                                    \
-            position:               absolute;                     \
-            right:                  30px;                         \
-            top:                    6px;                          \
-            opacity:                0.5;                          \
-      }                                                           \
-      .close:hover {                                              \
-            opacity:                1;                            \
-      }                                                           \
-      .close:before, .close:after {                               \
-            position:               absolute;                     \
-            left:                   15px;                         \
-            content:                ' ';                          \
-            height:                 20px;                         \
-            width:                  3.5px;                        \
-            background-color:       #4caf50;                      \
-      }                                                           \
-      .close:before {                                             \
-            transform:              rotate(45deg);                \
-      }                                                           \
-      .close:after {                                              \
-            transform:              rotate(-45deg);               \
       }                                                           \
 }                                                                 \
 ")});
