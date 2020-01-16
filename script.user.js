@@ -19,10 +19,9 @@
 
 main();
 
-var Generate_Template = `
+const htmlTemplate = `
 <button id="gmShowTemplate" name="templateButton" style="display:none" type="button">Show</button>
 <div id="discogGenerator">
-<input type="text" id="master_url" value="" style="display:none">
 <input type="text" id="master_url" value="" style="display:none">
 <div class="ui search" id="Discog_search">
 <input type="text" class="prompt input" id="searchID" placeholder="Artist + Album name"  onfocus="this.placeholder = ''" onblur="this.placeholder = 'Artist + Album name'">
@@ -45,7 +44,7 @@ HidePosts
 </div>
 `;
 
-var dginput = `
+const dginput = `
 <button id="gmShowTemplate" name="templateButton" style="display:none" type="button">Show</button>
 <div id="discogGenerator">
 <label>Enter Your discorg API Key, Then Click On Save :)</label>
@@ -61,7 +60,7 @@ function main() {
 		const APIVALUE = value;
 		if (APIVALUE !== 'foo') {
 			var temphtml = document.getElementsByTagName('dd')[0];
-			temphtml.innerHTML += Generate_Template;
+			temphtml.innerHTML += htmlTemplate;
 		} else {
 			temphtml = document.getElementsByTagName('dd')[0];
 			temphtml.innerHTML += dginput;
@@ -186,8 +185,8 @@ function generateTemplate(APIVALUE, titlechange) {
 			url: `${artist_url}?token=${APIVALUE}`,
 			onload: function(response) {
 				var artistjson = JSON.parse(response.responseText);
-                let masterUri = albumjson.uri;
-                let artistUri = artistjson.uri;
+				let masterUri = albumjson.uri;
+				let artistUri = artistjson.uri;
 				let Cover =
 					'[CENTER][IMG width="250px"]' + albumjson.images[0].uri + '[/IMG]\n';
 				let artist =
@@ -201,15 +200,24 @@ function generateTemplate(APIVALUE, titlechange) {
 				let tracklist = albumjson.tracklist;
 				let tracknum = tracklist.length + ' Tracks\n';
 				let tracks =
-					'[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Album Details[/B][/COLOR][/SIZE][/INDENT]\n[SPOILER="Track List"]\n';
+					'[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Album Details[/B][/COLOR][/SIZE][/INDENT]\n[SPOILER="Track List"]\n[TABLE=collapse]\n[TR]\n[TH]No.[/TH]\n[TH]Track Name[/TH]\n[TH]Track Duration[/TH]\n[/TR]\n';
 				for (let t of tracklist) {
-					tracks += t.position + ' ' + t.title + ' ' + t.duration + '\n';
-                }
-                tracks += '[/SPOILER]\n';
+					tracks +=
+						'[TR][TD]' +
+						t.position +
+						'[/TD]\n[TD]' +
+						t.title +
+						'[/TD]\n[TD]' +
+						t.duration +
+						'[/TD][/TR]\n';
+				}
+				tracks += '[/TABLE]\n[/SPOILER]\n';
 				let styles = '[SIZE=6]' + albumjson.styles[0];
 				let genres = albumjson.genres[0] + '[/SIZE][/CENTER]\n';
 				let artistinfo =
-					'[SPOILER="About Artist"]\n' + artistjson.profile + '\n[/SPOILER]';
+					'[SPOILER="About Artist"]\n' +
+					artistjson.profile.replace(/\[.=/gm, '').replace(/\]/gm, '') +
+					'\n[/SPOILER]';
 				let memberlist = artistjson.members;
 				let members =
 					'[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Artist Details[/B][/COLOR][/SIZE][/INDENT]\n[SPOILER="Member List"]\n';
