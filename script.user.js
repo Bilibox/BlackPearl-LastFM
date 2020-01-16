@@ -5,7 +5,6 @@
 // @author      Blackpearl_Team
 // @icon        https://blackpearl.biz/favicon.png
 // @include     /^https:\/\/blackpearl\.biz\/forums\/(88|89|90|91|163)\/post-thread/
-// @include     *blackpearl.biz*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @require     https://code.jquery.com/ui/1.12.1/jquery-ui.js
 // @require     https://raw.githubusercontent.com/Semantic-Org/UI-Search/master/search.js
