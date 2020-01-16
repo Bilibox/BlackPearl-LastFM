@@ -17,9 +17,11 @@
 // @run-at      document-end
 // ==/UserScript==
 
+main();
+
 var Generate_Template = `
-<button id="gmShowTemplate" name="template_button" style="display:none" type="button">Show</button>
-<div id="DiscogGenerator">
+<button id="gmShowTemplate" name="templateButton" style="display:none" type="button">Show</button>
+<div id="discogGenerator">
 <input type="text" id="master_url" value="" style="display:none">
 <input type="text" id="master_url" value="" style="display:none">
 <div class="ui search" id="Discog_search">
@@ -37,167 +39,182 @@ HideReactScore
 HidePosts
 <input type="number" id="HidePosts" min="0" max="50" value="0"> <br>
 <div id="textarea_divider">&nbsp;</div>
-<button id="gmGenerate" name="template_button" type="button">Generate Template</button>
-<button id="gmClearBtn" name="template_button" type="reset">Clear</button>
-<button id="gmHideTemplate" name="template_button" type="button">Hide</button>
+<button id="gmGenerate" name="templateButton" type="button">Generate Template</button>
+<button id="gmClearBtn" name="templateButton" type="reset">Clear</button>
+<button id="gmHideTemplate" name="templateButton" type="button">Hide</button>
 </div>
-`
+`;
+
 var dginput = `
-<button id="gmShowTemplate" name="template_button" style="display:none" type="button">Show</button>
-<div id="DiscogGenerator">
+<button id="gmShowTemplate" name="templateButton" style="display:none" type="button">Show</button>
+<div id="discogGenerator">
 <label>Enter Your discorg API Key, Then Click On Save :)</label>
 <input type="text" id="dgKey" value="" class="input" placeholder="discorg API Key" onfocus="this.placeholder = ''" onblur="this.placeholder = 'discorg API Key'">
-<button id="gmGenerate" name="template_button" onClick="window.location.reload();" type="button">Save Key</button>
-<button id="gmClearBtn" name="template_button" type="reset">Clear</button>
-<button id="gmHideTemplate" name="template_button" type="button">Hide</button>
+<button id="gmSaveKey" name="templateButton" type="button">Save Key</button>
+<button id="gmClearBtn" name="templateButton" type="reset">Clear</button>
+<button id="gmHideTemplate" name="templateButton" type="button">Hide</button>
 </div>
-`
+`;
 
-GM.getValue("DiscogKey", "foo").then(value => { const APIVALUE = value
-if (APIVALUE !== 'foo'){
-    var temphtml = document.getElementsByTagName("dd")[0];
-    temphtml.innerHTML += Generate_Template;
-} else {
-    temphtml = document.getElementsByTagName("dd")[0];
-    temphtml.innerHTML += dginput;
+function main() {
+	GM.getValue('DiscogKey', 'foo').then(value => {
+		const APIVALUE = value;
+		if (APIVALUE !== 'foo') {
+			var temphtml = document.getElementsByTagName('dd')[0];
+			temphtml.innerHTML += Generate_Template;
+		} else {
+			temphtml = document.getElementsByTagName('dd')[0];
+			temphtml.innerHTML += dginput;
+		}
+
+		var titlechange = document.getElementsByName('title')[0];
+		if (titlechange) {
+			titlechange.className += 'input';
+		}
+		$('#gmHideTemplate').click(() => hideTemplate());
+		$('#gmShowTemplate').click(() => showTemplate());
+		$('#gmSaveKey').click(() => saveApiKey(APIVALUE));
+		$('#gmGenerate').click(() => generateTemplate(titlechange));
+	});
 }
 
-var titlechange = document.getElementsByName("title")[0];
-if (titlechange){
-    titlechange.className += "input";
-}
 $(document).on('keydown', function(event) {
-    if (event.key == "Escape") {
-        $("#DiscogGenerator").hide ();
-        document.getElementById("gmShowTemplate").style.display = "block";
-    }
+	if (event.key == 'Escape') {
+		$('#discogGenerator').hide();
+		document.getElementById('gmShowTemplate').style.display = 'block';
+	}
 });
 
-$("#gmHideTemplate").click ( function () {
-    document.getElementById("gmShowTemplate").style.display = "block";
-    $("#DiscogGenerator").hide ();
-});
+function hideTemplate() {
+	document.getElementById('gmShowTemplate').style.display = 'block';
+	$('#discogGenerator').hide();
+}
 
-$("#gmShowTemplate").click ( function () {
-    document.getElementById("gmShowTemplate").style.display = "none";
-    $("#DiscogGenerator").show ();
-});
+function showTemplate() {
+	document.getElementById('gmShowTemplate').style.display = 'none';
+	$('#discogGenerator').show();
+}
 
-GM.getValue("DiscogKey", "foo").then(value => {
-    const DiscogKey = value
-$('#Discog_search')
-      .search({
-        type          : 'category',
-        apiSettings: {
-          url: `https://api.discogs.com/database/search?q={query}&token=${DiscogKey}`,
-          onResponse : function(myfunc) {
-        var
-          response = {
-            results : {}
-          }
-        ;
-              $.each(myfunc.results, function(index, item) {
-                  var
-                  category = item.type || 'Unknown',
-                      maxResults = 50;
-                  if(index >= maxResults) {
-                      return false;
-                  }
-                  if(response.results[category] === undefined) {
-                      response.results[category] = {
-                          name    : "~~~~~~~~~~"+category+"~~~~~~~~~~",
-                          results : []
-                      };
-                  }
-                  var Name = item.title + " (" + item.year + ")";
-                  response.results[category].results.push({
-                      title       : Name,
-                      description : Name,
-                      master_url   : item.master_url
-                  });
-              });
-              delete response.results["release"]
-              delete response.results["label"]
-              delete response.results["artist"]
-              return response;
-          }
-        },
-    fields: {
-        results : 'results',
-        title   : 'name',
-    },
-    onSelect: function(response){
-        console.log(response)
-        $('#master_url').val(response.master_url);
-    },
-    minCharacters : 3
-});
-    //--- Use jQuery to activate the dialog buttons.
-    $("#gmGenerate").click ( function () {
-        var dgKey = $("#dgKey").val ();
-        var ddl = $("#ddl").val ();
-        var hidereactscore = $("#HideReactScore").val ();
-        var hideposts = $("#HidePosts").val ();
-        var master_url = $("#master_url").val ();
-        if (DiscogKey == "foo") {
-            if (dgKey) {
-                GM.setValue("DiscogKey", dgKey);
-                window.location.reload();
-            } else {
-                alert("You Didn't Enter Your Key!!")
-            }
-        } else {
-            if (!master_url) {
-                alert("You Didn't Select A Result or Enter a URL!");
-            } else if (!ddl) {
-                alert("Uh Oh! You Forgot Your Download Link! That's Pretty Important...");
-            } else {
-                if (Downcloud.checked){
-                    ddl = '[DOWNCLOUD]' + ddl + '[/DOWNCLOUD]'
-                }
-                ddl = '[HIDEREACT=1,2,3,4,5,6]' + ddl + '[/HIDEREACT]'
-                if (hidereactscore !== "0"){
-                    ddl = `[HIDEREACTSCORE=${hidereactscore}]` + ddl + '[/HIDEREACTSCORE]'
-                }
-                if (hideposts !== "0"){
-                    ddl = `[HIDEPOSTS=${hideposts}]` + ddl + '[/HIDEPOSTS]'
-                }
-                var xhReq = new XMLHttpRequest();
-                xhReq.open("GET", `${master_url}?token=${DiscogKey}`, false);
-                xhReq.send(null);
-                var albumjson = JSON.parse(xhReq.responseText);
-                var artist_url = albumjson.artists[0].resource_url;
-                console.log(albumjson)
-                GM_xmlhttpRequest({
-                    method: "GET",
-                    url: `${artist_url}?token=${DiscogKey}`,
-                    onload: function(response) {
-                        var artistjson = JSON.parse(response.responseText);
-                        console.log(artistjson)
-                        var title = albumjson.title;
-                        var styles = albumjson.styles[0];
-                        var genres = albumjson.genres[0];
-                        var master_uri = albumjson.uri;
-                        var Cover = albumjson.images[0].uri;
-                        var artist = albumjson.artists[0].name;
-                        var memberlist = artistjson.members;
-                        var members = "";
-                        for (var ml of memberlist){
-                            members += ml.name + '\n[IMG width="150px"]' + ml.thumbnail_url + '[/IMG]\n' ;
-                        }
-                        var tracklist = albumjson.tracklist;
-                        var tracks = "";
-                        for (var t of tracklist){
-                            tracks += t.duration + " " + t.position + " " + t.title + '\n';
-                        }
-                        var tracknum = tracklist.length;
-                        var artistslinks = artistjson.urls;
-                        var artlink = ""
-                        for (var artistlink of artistslinks){
-                            artlink += artistlink + '\n';
-                        }
-                        ddl = "[hr][/hr][center][size=6][color=rgb(44, 171, 162)][b]Download Link[/b][/color][/size]\n" + ddl + "\n[/center]"
-                        var dump = `[CENTER][IMG width='250px']${Cover}[/IMG]
+function saveApiKey(APIVALUE) {
+	if (APIVALUE == 'foo') {
+		let dgKey = $('#dgKey').val();
+		if (dgKey) {
+			GM.setValue('DiscogKey', dgKey);
+		} else {
+			alert("You Didn't Enter Your Key!!");
+		}
+		document.getElementById('discogGenerator').remove();
+		document.getElementById('gmShowTemplate').remove();
+		main();
+	}
+}
+
+function searchDiscog(APIVALUE) {
+	$('#Discog_search').search({
+		type: 'category',
+		apiSettings: {
+			url: `https://api.discogs.com/database/search?q={query}&token=${APIVALUE}`,
+			onResponse: function(myfunc) {
+				var response = {
+					results: {}
+				};
+				$.each(myfunc.results, function(index, item) {
+					var category = item.type || 'Unknown',
+						maxResults = 50;
+					if (index >= maxResults) {
+						return false;
+					}
+					if (response.results[category] === undefined) {
+						response.results[category] = {
+							name: '~~~~~~~~~~' + category + '~~~~~~~~~~',
+							results: []
+						};
+					}
+					var Name = item.title + ' (' + item.year + ')';
+					response.results[category].results.push({
+						title: Name,
+						description: Name,
+						master_url: item.master_url
+					});
+				});
+				delete response.results['release'];
+				delete response.results['label'];
+				delete response.results['artist'];
+				return response;
+			}
+		},
+		fields: {
+			results: 'results',
+			title: 'name'
+		},
+		onSelect: function(response) {
+			console.log(response);
+			$('#master_url').val(response.master_url);
+		},
+		minCharacters: 3
+	});
+}
+
+function generateTemplate() {
+	let ddl = $('#ddl').val();
+	let hidereactscore = $('#HideReactScore').val();
+	let hideposts = $('#HidePosts').val();
+	let master_url = $('#master_url').val();
+	if (!master_url) {
+		alert("You Didn't Select A Result or Enter a URL!");
+	} else if (!ddl) {
+		alert("Uh Oh! You Forgot Your Download Link! That's Pretty Important...");
+	} else {
+		if (Downcloud.checked) {
+			ddl = '[DOWNCLOUD]' + ddl + '[/DOWNCLOUD]';
+		}
+		ddl = '[HIDEREACT=1,2,3,4,5,6]' + ddl + '[/HIDEREACT]';
+		if (hidereactscore !== '0') {
+			ddl = `[HIDEREACTSCORE=${hidereactscore}]` + ddl + '[/HIDEREACTSCORE]';
+		}
+		if (hideposts !== '0') {
+			ddl = `[HIDEPOSTS=${hideposts}]` + ddl + '[/HIDEPOSTS]';
+		}
+		var xhReq = new XMLHttpRequest();
+		xhReq.open('GET', `${master_url}?token=${DiscogKey}`, false);
+		xhReq.send(null);
+		var albumjson = JSON.parse(xhReq.responseText);
+		var artist_url = albumjson.artists[0].resource_url;
+		console.log(albumjson);
+		GM_xmlhttpRequest({
+			method: 'GET',
+			url: `${artist_url}?token=${DiscogKey}`,
+			onload: function(response) {
+				var artistjson = JSON.parse(response.responseText);
+				console.log(artistjson);
+				var title = albumjson.title;
+				var styles = albumjson.styles[0];
+				var genres = albumjson.genres[0];
+				var master_uri = albumjson.uri;
+				var Cover = albumjson.images[0].uri;
+				var artist = albumjson.artists[0].name;
+				var memberlist = artistjson.members;
+				var members = '';
+				for (var ml of memberlist) {
+					members +=
+						ml.name + '\n[IMG width="150px"]' + ml.thumbnail_url + '[/IMG]\n';
+				}
+				var tracklist = albumjson.tracklist;
+				var tracks = '';
+				for (var t of tracklist) {
+					tracks += t.duration + ' ' + t.position + ' ' + t.title + '\n';
+				}
+				var tracknum = tracklist.length;
+				var artistslinks = artistjson.urls;
+				var artlink = '';
+				for (var artistlink of artistslinks) {
+					artlink += artistlink + '\n';
+				}
+				ddl =
+					'[hr][/hr][center][size=6][color=rgb(44, 171, 162)][b]Download Link[/b][/color][/size]\n' +
+					ddl +
+					'\n[/center]';
+				var dump = `[CENTER][IMG width='250px']${Cover}[/IMG]
 [COLOR=rgb(44, 171, 162)][B][SIZE=6] ${artist} - ${title}[/SIZE][/B][/COLOR]
 ${tracknum} Tracks
 [SIZE=6]${styles} ${genres}[/SIZE]
@@ -214,26 +231,27 @@ ${artlink}
 [/SPOILER]
 [hr][/hr]
 ${ddl}`;
-                        GM_setClipboard (dump);
-                        try {
-                            document.getElementsByName("message")[0].value = dump;
-                        } catch(err) {
-                            alert('You should be running this in BBCode Mode. Check the Readme for more information!\n' + err);
-                        } finally {
-                            var xf_title_value = document.getElementById("title").value;
-                            if (!xf_title_value){
-                                document.getElementById("title").value = name;
-                            }
-                        }
-                    }
-                });
-            }
-        }
-    });
-});
-
+				GM_setClipboard(dump);
+				try {
+					document.getElementsByName('message')[0].value = dump;
+				} catch (err) {
+					alert(
+						'You should be running this in BBCode Mode. Check the Readme for more information!\n' +
+							err
+					);
+				} finally {
+                    let xf_title_value = titlechange.value;
+					if (!xf_title_value) {
+						document.getElementById('title').value = name;
+					}
+				}
+			}
+		});
+	}
+}
 //--- CSS styles make it work...
-GM_addStyle ( "                                                   \
+GM_addStyle(
+	"                                                   \
     @media screen and (min-width: 300px) {                        \
       /* Divide Buttons */                                        \
       .divider{                                                   \
@@ -242,7 +260,7 @@ GM_addStyle ( "                                                   \
             display:                inline-block;                 \
       }                                                           \
       /* Buttons */                                               \
-      button[name=template_button] {                              \
+      button[name=templateButton] {                               \
             background-color:       #4caf50;                      \
             color:                  white;                        \
             text-align:             center;                       \
@@ -334,7 +352,7 @@ GM_addStyle ( "                                                   \
             display:                inline-block;                 \
       }                                                           \
       /* Buttons */                                               \
-      button[name=template_button] {                              \
+      button[name=templateButton] {                               \
             background-color:       #4caf50;                      \
             color:                  white;                        \
             text-align:             center;                       \
@@ -418,4 +436,5 @@ GM_addStyle ( "                                                   \
             border-radius:          50%;                          \
       }                                                           \
 }                                                                 \
-")});
+"
+);
