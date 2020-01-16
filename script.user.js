@@ -5,6 +5,7 @@
 // @author      Blackpearl_Team
 // @icon        https://blackpearl.biz/favicon.png
 // @include     /^https:\/\/blackpearl\.biz\/forums\/(88|89|90|91|163)\/post-thread/
+// @include     *blackpearl.biz*
 // @require     https://code.jquery.com/jquery-3.4.1.min.js
 // @require     https://code.jquery.com/ui/1.12.1/jquery-ui.js
 // @require     https://raw.githubusercontent.com/Semantic-Org/UI-Search/master/search.js
@@ -181,57 +182,54 @@ function generateTemplate(APIVALUE, titlechange) {
 		xhReq.send(null);
 		var albumjson = JSON.parse(xhReq.responseText);
 		var artist_url = albumjson.artists[0].resource_url;
-		console.log(albumjson);
 		GM_xmlhttpRequest({
 			method: 'GET',
 			url: `${artist_url}?token=${APIVALUE}`,
 			onload: function(response) {
 				var artistjson = JSON.parse(response.responseText);
-				console.log(artistjson);
-				var title = albumjson.title;
-				var styles = albumjson.styles[0];
-				var genres = albumjson.genres[0];
-				var master_uri = albumjson.uri;
-				var Cover = albumjson.images[0].uri;
-				var artist = albumjson.artists[0].name;
-				var memberlist = artistjson.members;
-				var members = '';
-				for (var ml of memberlist) {
+                let masterUri = albumjson.uri;
+                let artistUri = artistjson.uri;
+				let Cover =
+					'[CENTER][IMG width="250px"]' + albumjson.images[0].uri + '[/IMG]\n';
+				let artist =
+					`[COLOR=rgb(44, 171, 162)][B][SIZE=6][URL=${artistUri}]` +
+					albumjson.artists[0].name +
+					'[/URL]\n';
+				let title =
+					`[URL=${masterUri}]` +
+					albumjson.title +
+					'[/URL][/SIZE][/B][/COLOR]\n';
+				let tracklist = albumjson.tracklist;
+				let tracknum = tracklist.length + ' Tracks\n';
+				let tracks =
+					'[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Album Details[/B][/COLOR][/SIZE][/INDENT]\n[SPOILER="Track List"]\n';
+				for (let t of tracklist) {
+					tracks += t.position + ' ' + t.title + ' ' + t.duration + '\n';
+                }
+                tracks += '[/SPOILER]\n';
+				let styles = '[SIZE=6]' + albumjson.styles[0];
+				let genres = albumjson.genres[0] + '[/SIZE][/CENTER]\n';
+				let artistinfo =
+					'[SPOILER="About Artist"]\n' + artistjson.profile + '\n[/SPOILER]';
+				let memberlist = artistjson.members;
+				let members =
+					'[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Artist Details[/B][/COLOR][/SIZE][/INDENT]\n[SPOILER="Member List"]\n';
+				for (let ml of memberlist) {
 					members +=
 						ml.name + '\n[IMG width="150px"]' + ml.thumbnail_url + '[/IMG]\n';
 				}
-				var tracklist = albumjson.tracklist;
-				var tracks = '';
-				for (var t of tracklist) {
-					tracks += t.duration + ' ' + t.position + ' ' + t.title + '\n';
-				}
-				var tracknum = tracklist.length;
-				var artistslinks = artistjson.urls;
-				var artlink = '';
-				for (var artistlink of artistslinks) {
+				members += '\n[/SPOILER]\n';
+				let artistslinks = artistjson.urls;
+				let artlink = '[SPOILER="Artist Links"]\n';
+				for (let artistlink of artistslinks) {
 					artlink += artistlink + '\n';
 				}
+				artlink += '\n[/SPOILER]\n[hr][/hr]\n';
 				ddl =
 					'[hr][/hr][center][size=6][color=rgb(44, 171, 162)][b]Download Link[/b][/color][/size]\n' +
 					ddl +
 					'\n[/center]';
-				var dump = `[CENTER][IMG width='250px']${Cover}[/IMG]
-[COLOR=rgb(44, 171, 162)][B][SIZE=6] ${artist} - ${title}[/SIZE][/B][/COLOR]
-${tracknum} Tracks
-[SIZE=6]${styles} ${genres}[/SIZE]
-[/CENTER]
-[INDENT][SIZE=6][COLOR=rgb(44, 171, 162)][B]Artist & Album Details[/B][/COLOR][/SIZE][/INDENT]
-[SPOILER='Member List']
-${members}
-[/SPOILER]
-[SPOILER='Track List']
-${tracks}
-[/SPOILER]
-[SPOILER='Artist Links']
-${artlink}
-[/SPOILER]
-[hr][/hr]
-${ddl}`;
+				let dump = `${Cover}${artist}${title}${tracknum}${styles} ${genres}${members}${artistinfo}${artlink}${tracks}${ddl}`;
 				GM_setClipboard(dump);
 				try {
 					document.getElementsByName('message')[0].value = dump;
@@ -252,7 +250,7 @@ ${ddl}`;
 }
 //--- CSS styles make it work...
 GM_addStyle(
-	"                                                   \
+	"                                                             \
     @media screen and (min-width: 300px) {                        \
       /* Divide Buttons */                                        \
       .divider{                                                   \
@@ -344,6 +342,9 @@ GM_addStyle(
       .slider.round:before {                                      \
             border-radius:          50%;                          \
       }                                                           \
+      .content {                                                  \
+            cursor:                 pointer;                      \
+  }                                                               \
 }                                                                 \
     @media screen and (min-width: 768px) {                        \
       /* Divide Buttons */                                        \
@@ -436,6 +437,9 @@ GM_addStyle(
       .slider.round:before {                                      \
             border-radius:          50%;                          \
       }                                                           \
+      .content {                                                  \
+            cursor:                 pointer;                      \
+  }                                                               \
 }                                                                 \
 "
 );
