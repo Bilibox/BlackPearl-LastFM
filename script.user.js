@@ -73,8 +73,8 @@ function main() {
 		}
 		$('#gmHideTemplate').click(() => hideTemplate());
 		$('#gmShowTemplate').click(() => showTemplate());
-        $('#gmSaveKey').click(() => saveApiKey(APIVALUE));
-        searchDiscog(APIVALUE)
+		$('#gmSaveKey').click(() => saveApiKey(APIVALUE));
+		searchDiscog(APIVALUE);
 		$('#gmGenerate').click(() => generateTemplate(APIVALUE, titlechange));
 	});
 }
@@ -241,7 +241,7 @@ ${ddl}`;
 							err
 					);
 				} finally {
-                    let xf_title_value = titlechange.value;
+					let xf_title_value = titlechange.value;
 					if (!xf_title_value) {
 						document.getElementById('title').value = name;
 					}
