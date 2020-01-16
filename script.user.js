@@ -73,8 +73,9 @@ function main() {
 		}
 		$('#gmHideTemplate').click(() => hideTemplate());
 		$('#gmShowTemplate').click(() => showTemplate());
-		$('#gmSaveKey').click(() => saveApiKey(APIVALUE));
-		$('#gmGenerate').click(() => generateTemplate(titlechange));
+        $('#gmSaveKey').click(() => saveApiKey(APIVALUE));
+        searchDiscog(APIVALUE)
+		$('#gmGenerate').click(() => generateTemplate(APIVALUE, titlechange));
 	});
 }
 
@@ -155,7 +156,7 @@ function searchDiscog(APIVALUE) {
 	});
 }
 
-function generateTemplate() {
+function generateTemplate(APIVALUE, titlechange) {
 	let ddl = $('#ddl').val();
 	let hidereactscore = $('#HideReactScore').val();
 	let hideposts = $('#HidePosts').val();
@@ -176,14 +177,14 @@ function generateTemplate() {
 			ddl = `[HIDEPOSTS=${hideposts}]` + ddl + '[/HIDEPOSTS]';
 		}
 		var xhReq = new XMLHttpRequest();
-		xhReq.open('GET', `${master_url}?token=${DiscogKey}`, false);
+		xhReq.open('GET', `${master_url}?token=${APIVALUE}`, false);
 		xhReq.send(null);
 		var albumjson = JSON.parse(xhReq.responseText);
 		var artist_url = albumjson.artists[0].resource_url;
 		console.log(albumjson);
 		GM_xmlhttpRequest({
 			method: 'GET',
-			url: `${artist_url}?token=${DiscogKey}`,
+			url: `${artist_url}?token=${APIVALUE}`,
 			onload: function(response) {
 				var artistjson = JSON.parse(response.responseText);
 				console.log(artistjson);
